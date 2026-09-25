@@ -221,6 +221,9 @@ class ServiceConnectionManager {
     if (app == null || !await app.isFlutterApp) {
       return null;
     }
+    // Flutter web apps (served via DWDS) do not have engine 'FlutterView's or
+    // the raster cache service extension.
+    if (await app.isDartWebApp) return null;
 
     final viewId = await _flutterViewId;
 
@@ -234,10 +237,14 @@ class ServiceConnectionManager {
   ///
   /// If not connected to a Flutter app, returns `null`.
   Future<double?> get queryDisplayRefreshRate async {
-    if (serviceManager.connectedApp == null ||
-        !await serviceManager.connectedApp!.isFlutterApp) {
+    final app = serviceManager.connectedApp;
+    if (app == null || !await app.isFlutterApp) {
       return null;
     }
+
+    // Flutter web apps (served via DWDS) do not have engine 'FlutterView's or
+    // the display refresh rate service extension.
+    if (await app.isDartWebApp) return defaultRefreshRate;
 
     const unknownRefreshRate = 0.0;
 

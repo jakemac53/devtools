@@ -1,0 +1,16 @@
+# Copyright 2026 The Flutter Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file or at https://developers.google.com/open-source/licenses/bsd.
+name: jmespath
+description: A pure Dart implementation of the JMESPath query language for JSON.
+publish_to: none
+
+version: 0.1.0
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+resolution: workspace
+
+dev_dependencies:
+  test: ^1.21.2

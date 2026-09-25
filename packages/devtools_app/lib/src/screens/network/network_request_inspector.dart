@@ -3,6 +3,7 @@
 // found in the LICENSE file or at https://developers.google.com/open-source/licenses/bsd.
 
 import 'package:devtools_app_shared/ui.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../shared/analytics/constants.dart' as gac;
@@ -15,7 +16,13 @@ import 'network_request_inspector_views.dart';
 
 /// A [Widget] which displays information about a network request.
 class NetworkRequestInspector extends StatelessWidget {
-  const NetworkRequestInspector({super.key});
+  const NetworkRequestInspector({super.key, this.request});
+
+  /// The request to inspect.
+  ///
+  /// Defaults to the request selected in the Network screen. Other hosts of
+  /// this widget (e.g. generated UI) may provide their own selection.
+  final ValueListenable<NetworkRequest?>? request;
 
   static const _overviewTabTitle = 'Overview';
   static const _framesTabTitle = 'Frames';
@@ -38,7 +45,7 @@ class NetworkRequestInspector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<NetworkRequest?>(
-      valueListenable: controller.selectedRequest,
+      valueListenable: request ?? controller.selectedRequest,
       builder: (context, data, _) {
         return data == null
             ? RoundedOutlinedBorder(

@@ -141,6 +141,7 @@ enum ScreenMetaData {
     requiresAdvancedDeveloperMode: true,
     requiresConnection: false,
   ),
+  genUi('genui', title: 'GenUI', icon: Icons.auto_awesome),
   simple('simple');
 
   const ScreenMetaData(

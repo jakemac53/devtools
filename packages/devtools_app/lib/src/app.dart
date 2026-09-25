@@ -33,6 +33,8 @@ import 'screens/deep_link_validation/deep_links_controller.dart';
 import 'screens/deep_link_validation/deep_links_screen.dart';
 import 'screens/dtd/dtd_tools_controller.dart';
 import 'screens/dtd/dtd_tools_screen.dart';
+import 'screens/genui/genui_controller.dart';
+import 'screens/genui/genui_screen.dart';
 import 'screens/inspector/inspector_screen.dart';
 import 'screens/inspector/inspector_screen_controller.dart';
 import 'screens/logging/logging_controller.dart';
@@ -743,6 +745,11 @@ List<DevToolsScreen> defaultScreens({
       DTDToolsScreen(),
       createController: (_) => DTDToolsController(),
     ),
+    if (FeatureFlags.genUi.isEnabled)
+      DevToolsScreen<GenUiController>(
+        GenUiScreen(),
+        createController: (_) => GenUiController(),
+      ),
   ];
 }
 

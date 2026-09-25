@@ -10,6 +10,7 @@ workspace:
   - packages/devtools_extensions
   - packages/devtools_shared
   - packages/devtools_test
+  - packages/jmespath
   - tool
 
 dev_dependencies:
