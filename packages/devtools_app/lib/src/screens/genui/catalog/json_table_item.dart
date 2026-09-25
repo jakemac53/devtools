@@ -12,6 +12,7 @@ import '../data/json_utils.dart';
 import '../data/ref_store.dart';
 import 'bound_value.dart';
 import 'json_column_data.dart';
+import 'layout_safety.dart';
 
 /// Creates the `JsonTable` catalog item, a data-bound wrapper around
 /// DevTools' [FlatTable].
@@ -72,28 +73,31 @@ CatalogItem jsonTableCatalogItem() => CatalogItem(
     },
     required: ['rows'],
   ),
+  isImplicitlyFlexible: true,
   widgetBuilder: (itemContext) {
     final data = itemContext.data as Map<String, Object?>;
-    return ResolvedValueBuilder(
-      dataContext: itemContext.dataContext,
-      value: data['rows'],
-      builder: (context, rows) => JsonTable(
-        key: ValueKey('${itemContext.surfaceId}/${itemContext.id}'),
-        tableId: '${itemContext.surfaceId}/${itemContext.id}',
-        rows: [
-          if (rows is List)
-            for (final row in rows)
-              if (row is Map) row.cast<String, Object?>(),
-        ],
-        columns: parseColumns(data),
-        defaultSortField: data['defaultSortField'] as String?,
-        sortDescending: data['sortDescending'] == true,
-        height: (data['height'] as num?)?.toDouble() ?? 300,
-        onSelected: switch (data['selectionPath']) {
-          final String path when path.isNotEmpty =>
-            (row) => itemContext.dataContext.update(DataPath(path), row),
-          _ => null,
-        },
+    return BoundedWidth(
+      child: ResolvedValueBuilder(
+        dataContext: itemContext.dataContext,
+        value: data['rows'],
+        builder: (context, rows) => JsonTable(
+          key: ValueKey('${itemContext.surfaceId}/${itemContext.id}'),
+          tableId: '${itemContext.surfaceId}/${itemContext.id}',
+          rows: [
+            if (rows is List)
+              for (final row in rows)
+                if (row is Map) row.cast<String, Object?>(),
+          ],
+          columns: parseColumns(data),
+          defaultSortField: data['defaultSortField'] as String?,
+          sortDescending: data['sortDescending'] == true,
+          height: (data['height'] as num?)?.toDouble() ?? 300,
+          onSelected: switch (data['selectionPath']) {
+            final String path when path.isNotEmpty =>
+              (row) => itemContext.dataContext.update(DataPath(path), row),
+            _ => null,
+          },
+        ),
       ),
     );
   },

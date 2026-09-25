@@ -12,6 +12,7 @@ import '../../../shared/charts/chart_controller.dart';
 import '../../../shared/charts/chart_trace.dart' as chart_trace;
 import '../data/json_utils.dart';
 import 'bound_value.dart';
+import 'layout_safety.dart';
 
 /// Creates the `TimeSeriesChart` catalog item, a data-bound wrapper around
 /// DevTools' live [Chart] (the one used by the Memory screen).
@@ -75,26 +76,29 @@ CatalogItem timeSeriesChartCatalogItem() => CatalogItem(
       ]
     ''',
   ],
+  isImplicitlyFlexible: true,
   widgetBuilder: (itemContext) {
     final data = itemContext.data as Map<String, Object?>;
     final series = [
       for (final s in (data['series'] as List? ?? const []).whereType<Map>())
         if (s['field'] is String) ChartSeries.fromJson(s.cast()),
     ];
-    return ResolvedValueBuilder(
-      dataContext: itemContext.dataContext,
-      value: data['data'],
-      builder: (context, rows) => TimeSeriesChart(
-        key: ValueKey('${itemContext.surfaceId}/${itemContext.id}'),
-        rows: [
-          if (rows is List)
-            for (final r in rows)
-              if (r is Map) r.cast<String, Object?>(),
-        ],
-        series: series,
-        timestampField: data['timestampField'] as String? ?? 'timestamp',
-        title: data['title'] as String? ?? '',
-        height: (data['height'] as num?)?.toDouble() ?? 150,
+    return BoundedWidth(
+      child: ResolvedValueBuilder(
+        dataContext: itemContext.dataContext,
+        value: data['data'],
+        builder: (context, rows) => TimeSeriesChart(
+          key: ValueKey('${itemContext.surfaceId}/${itemContext.id}'),
+          rows: [
+            if (rows is List)
+              for (final r in rows)
+                if (r is Map) r.cast<String, Object?>(),
+          ],
+          series: series,
+          timestampField: data['timestampField'] as String? ?? 'timestamp',
+          title: data['title'] as String? ?? '',
+          height: (data['height'] as num?)?.toDouble() ?? 150,
+        ),
       ),
     );
   },

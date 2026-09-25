@@ -12,6 +12,7 @@ import 'package:genui/genui.dart';
 
 import '../../shared/framework/screen.dart';
 import '../../shared/framework/screen_controllers.dart';
+import '../../shared/primitives/storage.dart';
 import 'agent/agent_tools.dart';
 import 'agent/genkit_transport.dart';
 import 'agent/system_prompt.dart';
@@ -19,6 +20,7 @@ import 'catalog/action_delegate.dart';
 import 'catalog/devtools_catalog.dart';
 import 'data/json_utils.dart';
 import 'genui_spec.dart';
+import 'genui_store.dart';
 import 'sources/default_registries.dart';
 
 /// Who authored a [GenUiChatEntry].
@@ -40,13 +42,22 @@ class GenUiChatEntry {
 /// been provided.
 class GenUiController extends DevToolsScreenController
     with AutoDisposeControllerMixin {
-  GenUiController({GenUiRegistries? registries})
-    : registries = registries ?? GenUiRegistries.defaults();
+  GenUiController({GenUiRegistries? registries, GenUiStore? store})
+    : registries = registries ?? GenUiRegistries.defaults(),
+      _store = store;
 
   @override
   final screenId = ScreenMetaData.genUi.id;
 
   final GenUiRegistries registries;
+
+  /// Persists the API key and saved pages. Null when no DevTools [Storage] is
+  /// available (e.g. in tests), in which case nothing is persisted.
+  GenUiStore? get store => _store ??= switch (globals[Storage]) {
+    final Storage storage => GenUiStore(storage),
+    _ => null,
+  };
+  GenUiStore? _store;
 
   late final Catalog catalog = buildDevToolsCatalog(registries);
 
@@ -76,9 +87,17 @@ class GenUiController extends DevToolsScreenController
   ValueListenable<bool> get hasAgent => _hasAgent;
   final _hasAgent = ValueNotifier<bool>(false);
 
+  /// Pages the user saved as favorites, sorted by name.
+  ValueListenable<List<SavedGenUiPage>> get savedPages => _savedPages;
+  final _savedPages = ValueNotifier<List<SavedGenUiPage>>(const []);
+
   Conversation? _conversation;
   final _conversationSubscriptions = <StreamSubscription<Object?>>[];
   StreamSubscription<Object?>? _surfaceSubscription;
+
+  /// Completes once persisted settings have been loaded.
+  Future<void> get persistedStateLoaded => _persistedStateLoaded.future;
+  final _persistedStateLoaded = Completer<void>();
 
   @override
   void init() {
@@ -86,15 +105,39 @@ class GenUiController extends DevToolsScreenController
     _surfaceSubscription = surfaceController.surfaceUpdates.listen((_) {
       _surfaceIds.value = surfaceController.activeSurfaceIds.toList();
     });
+    unawaited(_loadPersistedState());
+  }
+
+  Future<void> _loadPersistedState() async {
+    try {
+      final store = this.store;
+      if (store == null) return;
+      final apiKey = await store.readApiKey();
+      if (apiKey != null && !_hasAgent.value) {
+        configureAgent(apiKey, remember: false);
+      }
+      _savedPages.value = _sorted(await store.readSavedPages());
+    } finally {
+      _persistedStateLoaded.complete();
+    }
   }
 
   /// Configures the agent with a Gemini [apiKey], replacing any existing
   /// conversation.
-  void configureAgent(String apiKey, {String model = defaultGenUiModel}) {
+  ///
+  /// When [remember] is true the key is persisted, so the agent is configured
+  /// automatically the next time DevTools starts.
+  void configureAgent(
+    String apiKey, {
+    String model = defaultGenUiModel,
+    bool remember = true,
+  }) {
     _disposeConversation();
-    if (apiKey.trim().isEmpty) return;
+    apiKey = apiKey.trim();
+    if (apiKey.isEmpty) return;
+    if (remember) unawaited(store?.writeApiKey(apiKey));
     final transport = GenkitTransport(
-      apiKey: apiKey.trim(),
+      apiKey: apiKey,
       model: model,
       systemPrompt: buildGenUiSystemPrompt(catalog),
       tools: agentTools,
@@ -116,6 +159,47 @@ class GenUiController extends DevToolsScreenController
         conversation.state.removeListener(onStateChanged);
     _hasAgent.value = true;
   }
+
+  /// Disconnects the agent and deletes the stored API key.
+  Future<void> forgetAgent() async {
+    _disposeConversation();
+    await store?.writeApiKey(null);
+  }
+
+  /// Saves the current surfaces as a favorite page named [name], replacing
+  /// any saved page with the same name.
+  Future<void> saveCurrentPage(String name) async {
+    name = name.trim();
+    if (name.isEmpty) throw ArgumentError.value(name, 'name', 'is empty');
+    final page = SavedGenUiPage(
+      name: name,
+      spec: exportSpec(),
+      savedAt: DateTime.now(),
+    );
+    await _writeSavedPages([
+      for (final p in _savedPages.value)
+        if (p.name != name) p,
+      page,
+    ]);
+  }
+
+  /// Replaces the current surfaces with the saved [page].
+  void loadSavedPage(SavedGenUiPage page) => loadSpec(page.spec);
+
+  /// Deletes the saved page named [name].
+  Future<void> deleteSavedPage(String name) => _writeSavedPages([
+    for (final p in _savedPages.value)
+      if (p.name != name) p,
+  ]);
+
+  Future<void> _writeSavedPages(List<SavedGenUiPage> pages) async {
+    _savedPages.value = _sorted(pages);
+    await store?.writeSavedPages(_savedPages.value);
+  }
+
+  static List<SavedGenUiPage> _sorted(List<SavedGenUiPage> pages) =>
+      [...pages]
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
   VoidCallback? _removeStateListener;
 
@@ -238,6 +322,7 @@ class GenUiController extends DevToolsScreenController
     _chatLog.dispose();
     _isWaiting.dispose();
     _hasAgent.dispose();
+    _savedPages.dispose();
     super.dispose();
   }
 }

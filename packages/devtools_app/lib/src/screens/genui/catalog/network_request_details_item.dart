@@ -10,6 +10,7 @@ import '../../network/network_model.dart';
 import '../../network/network_request_inspector.dart';
 import '../data/ref_store.dart';
 import 'bound_value.dart';
+import 'layout_safety.dart';
 
 /// Creates the `NetworkRequestDetails` catalog item: a Tier-2 composite that
 /// embeds the real Network screen request inspector (overview, headers,
@@ -33,15 +34,18 @@ CatalogItem networkRequestDetailsCatalogItem(GenUiRefStore refs) => CatalogItem(
     },
     required: ['request'],
   ),
+  isImplicitlyFlexible: true,
   widgetBuilder: (itemContext) {
     final data = itemContext.data as Map<String, Object?>;
-    return ResolvedValueBuilder(
-      dataContext: itemContext.dataContext,
-      value: data['request'],
-      builder: (context, value) => SizedBox(
-        height: (data['height'] as num?)?.toDouble() ?? 400,
-        child: _NetworkRequestDetails(
-          request: refs.resolve<NetworkRequest>(value),
+    return BoundedWidth(
+      child: ResolvedValueBuilder(
+        dataContext: itemContext.dataContext,
+        value: data['request'],
+        builder: (context, value) => SizedBox(
+          height: (data['height'] as num?)?.toDouble() ?? 400,
+          child: _NetworkRequestDetails(
+            request: refs.resolve<NetworkRequest>(value),
+          ),
         ),
       ),
     );

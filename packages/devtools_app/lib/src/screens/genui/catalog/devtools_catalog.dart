@@ -8,6 +8,7 @@ import '../sources/default_registries.dart';
 import 'data_source_item.dart';
 import 'json_table_item.dart';
 import 'key_value_item.dart';
+import 'layout_safety.dart';
 import 'network_request_details_item.dart';
 import 'time_series_chart_item.dart';
 
@@ -42,8 +43,13 @@ Flutter app. Live data NEVER goes into your messages directly. Instead:
    confirmation first.
 
 Every `DataSource` must be part of the component tree (e.g. a child of the
-root `Column`) to be active. Tables and charts need a bounded height; set
-`height` when needed.
+root `Column`) to be active.
+
+Layout: the canvas scrolls vertically, so vertical space is unbounded. Size
+tables, charts and details panes with `height` (they have sensible defaults);
+`weight` is ignored for children of vertical `Column`s. To place things side by
+side use a `Row`: tables, charts and details panes share its width
+automatically, and `weight` sets their relative widths.
 ''';
 
 /// Builds the catalog used by the GenUI screen: the A2UI basic catalog plus
@@ -54,6 +60,7 @@ Catalog buildDevToolsCatalog(GenUiRegistries registries) {
     catalogId: devToolsCatalogId,
     catalogIdAliases: [?basic.catalogId],
     newItems: [
+      ...layoutSafeBasicItems(basic),
       dataSourceCatalogItem(registries.dataSources),
       jsonTableCatalogItem(),
       timeSeriesChartCatalogItem(),

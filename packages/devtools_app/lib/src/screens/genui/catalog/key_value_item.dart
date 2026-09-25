@@ -10,6 +10,7 @@ import '../../vm_developer/vm_developer_common_widgets.dart';
 import '../data/ref_store.dart';
 import 'bound_value.dart';
 import 'json_column_data.dart';
+import 'layout_safety.dart';
 
 /// Creates the `KeyValue` catalog item, which renders an object as a DevTools
 /// info card (the same [VMInfoCard] the VM Tools screen uses).
@@ -54,14 +55,17 @@ CatalogItem keyValueCatalogItem() => CatalogItem(
       for (final f in (data['fields'] as List? ?? const []).whereType<Map>())
         if (f['field'] is String) f.cast<String, Object?>(),
     ];
-    return ResolvedValueBuilder(
-      dataContext: itemContext.dataContext,
-      value: data['value'],
-      builder: (context, value) => VMInfoCard(
-        title: data['title'] as String? ?? '',
-        rowKeyValues: keyValueRows(
-          value is Map ? value.cast<String, Object?>() : const {},
-          fields,
+    return BoundedWidth(
+      width: 320,
+      child: ResolvedValueBuilder(
+        dataContext: itemContext.dataContext,
+        value: data['value'],
+        builder: (context, value) => VMInfoCard(
+          title: data['title'] as String? ?? '',
+          rowKeyValues: keyValueRows(
+            value is Map ? value.cast<String, Object?>() : const {},
+            fields,
+          ),
         ),
       ),
     );
