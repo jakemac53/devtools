@@ -153,12 +153,13 @@ The prototype is structured so that each part of the MCP App path swaps in witho
 ## Test results
 
 - `packages/jmespath`: **924 tests pass** (the full official compliance suite plus unit tests, zero skips).
-- `packages/devtools_app/test/screens/genui`: **39 tests pass**:
+- `packages/devtools_app/test/screens/genui`: **84 tests pass** (39 at the time of the initial report):
   - registries and JMESPath query/error handling
   - catalog schemas and column/format parsing
   - DataSource binding lifecycle
   - end-to-end surface replay (DataSource → KeyValue)
   - `memory.classes` allocation-profile projection and presets
+  - later additions: layout safety, CPU, chart, inspector and property editor tests
 - MCP `analyze_files` shows no issues in new or changed files. Pre-existing unrelated issues (missing generated mocks, fixture apps) remain.
 
 ## How to run
@@ -180,6 +181,14 @@ The prototype is structured so that each part of the MCP App path swaps in witho
 - **Layout safety.** Complex generated layouts triggered `'!semantics.parentDataDirty'` assertion cascades. The causes were data components receiving unbounded width inside a Row or horizontal List, and `weight` children inside the unbounded root Column. `catalog/layout_safety.dart` wraps the basic Row, Column, and List components so that flex is dropped on unbounded axes, and data components get a default width when unbounded. `test/screens/genui/layout_test.dart` covers these cases.
 - **Persistence.** The API key (optional, stored in plain text) and named saved pages are kept in DevTools' existing `Storage`, so no new plugin dependency is needed.
 - **CPU profiler data sources.** `cpu.functions` gives per-function self/total samples, like the method table. `cpu.activity` gives time-bucketed samples by frame category and user tag, for charts. `cpu.status` reports recording and busy state. The actions are `cpu.startRecording`, `cpu.stopRecording`, and `cpu.clear`. The sources read either a rolling `live` window straight from the VM sample buffer (no recording needed) or the last `recording` from `ProfilerScreenController`. Both paths reuse `CpuProfileData`. No refactor of the profiler controllers was needed; the flame chart and call tree composites still need one.
+- **Simple charts.** `BarChart` (ranked top-N), `PieChart` (donut with "Other" grouping) and `Stat` (headline number with thresholds and an optional sparkline) cover the common dashboard shapes that `TimeSeriesChart` and `JsonTable` didn't.
+- **Inspector components.** This turned out easier than the "Heavier composites" table predicted. `WidgetTree`, `WidgetDetails`, `LayoutExplorer` (flex explorer or box diagram), `WidgetProperties` and `InspectorControls` render the real Inspector widgets against the shared v2 `InspectorController`. They need no refactor. The controller only fetches while a tree client is attached, so an `InspectorHost` attaches a headless `InspectorControllerClient` while any inspector component is mounted, and waits until the isolate is not paused. Selection is shared with the Inspector screen and the device. The data sources are `inspector.selection`, `inspector.widgetTree` and `inspector.status`. The actions are `inspector.selectWidget`, `inspector.refresh`, `inspector.toggleImplementationWidgets`, `inspector.setSelectMode` and `inspector.setOverlay` (the last two change the app).
+- **Property editor.** `PropertyEditor` reuses the IDE sidebar's `PropertyEditorView` and `PropertyEditorController`, so edits go through the analysis server and change the source in the IDE. It needs a small, backwards-compatible controller change:
+  - `followActiveLocation: false` (the sidebar keeps the default `true`).
+  - `showWidgetAt` / `clearWidget`.
+  - A re-fetch after each edit, and dropping of stale results.
+
+  By default the component follows the inspector selection by mapping the widget's creation location to an LSP position. With `source: "editor"` it follows the IDE cursor like the sidebar. It needs DevTools to be connected to the IDE's DTD. If there is no connection, the component offers a field to paste a DTD URI. A DTD connection can only `streamListen` once, so one `EditorClient` is shared per connection. Limitation: creation locations come from the running app, so after an edit shifts lines, other widgets' locations are stale until the next hot reload.
 
 ## Recommended next steps
 

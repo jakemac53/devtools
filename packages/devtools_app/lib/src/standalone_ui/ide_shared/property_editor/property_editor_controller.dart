@@ -32,11 +32,21 @@ typedef EditArgumentFunction =
 
 class PropertyEditorController extends DisposableController
     with AutoDisposeControllerMixin, FilterControllerMixin<EditableProperty> {
-  PropertyEditorController(this.editorClient) {
+  PropertyEditorController(
+    this.editorClient, {
+    this.followActiveLocation = true,
+  }) {
     init();
   }
 
   final EditorClient editorClient;
+
+  /// Whether this controller updates in response to the IDE's active location
+  /// (cursor) changing.
+  ///
+  /// When false, the widget to edit is chosen explicitly with [showWidgetAt]
+  /// (for example, from the widget selected in the Flutter inspector).
+  final bool followActiveLocation;
 
   String get gaId => gac.PropertyEditorSidebar.id;
 
@@ -79,6 +89,7 @@ class PropertyEditorController extends DisposableController
     // Update in response to ActiveLocationChanged events.
     autoDisposeStreamSubscription(
       editorClient.activeLocationChangedStream.listen((event) {
+        if (!followActiveLocation) return;
         if (_waitingForFirstEvent) _waitingForFirstEvent = false;
         final textDocument = event.textDocument;
         final cursorPosition = event.selections.first.active;
@@ -149,13 +160,54 @@ class PropertyEditorController extends DisposableController
     final document = _currentDocument;
     final position = _currentCursorPosition;
     if (document == null || position == null) return null;
-    return editorClient.editArgument(
+    final response = await editorClient.editArgument(
       textDocument: document,
       position: position,
       name: name,
       value: value,
       screenId: gac.PropertyEditorSidebar.id,
     );
+    if (!followActiveLocation && response.success && !disposed) {
+      // No ActiveLocationChanged event will arrive to refresh the data, so
+      // re-fetch the editable arguments for the same location.
+      _requestDebouncer.run(
+        () => _updateWithEditableWidgetData(
+          textDocument: document,
+          cursorPosition: position,
+        ),
+      );
+    }
+    return response;
+  }
+
+  /// Shows the editable properties of the widget constructor invocation at
+  /// [position] (0-based LSP line and character) in the file at [fileUri].
+  ///
+  /// Intended for use when [followActiveLocation] is false.
+  Future<void> showWidgetAt({
+    required String fileUri,
+    required CursorPosition position,
+  }) async {
+    _waitingForFirstEvent = false;
+    final textDocument = TextDocument(uriAsString: fileUri, version: null);
+    if (textDocument == _currentDocument &&
+        position == _currentCursorPosition &&
+        _editableWidgetData.value != null) {
+      return;
+    }
+    await _updateWithEditableWidgetData(
+      textDocument: textDocument,
+      cursorPosition: position,
+    );
+  }
+
+  /// Clears the currently displayed widget, if any.
+  void clearWidget() {
+    _waitingForFirstEvent = false;
+    _currentDocument = null;
+    _currentCursorPosition = null;
+    _editableWidgetData.value = null;
+    filterData(activeFilter.value);
   }
 
   Future<GenericApiResponse?> executeCommand({
@@ -226,6 +278,14 @@ class PropertyEditorController extends DisposableController
       );
     }
     // Update the widget data.
+    if (!followActiveLocation &&
+        (disposed ||
+            _currentDocument != textDocument ||
+            _currentCursorPosition != cursorPosition)) {
+      // The explicitly requested location changed while this request was in
+      // flight, so this result is stale.
+      return;
+    }
     final name = editableArgsResult?.name;
     _editableWidgetData.value = (
       properties: _extractProperties(editableArgsResult),

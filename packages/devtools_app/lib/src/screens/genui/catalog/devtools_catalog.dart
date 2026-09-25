@@ -6,10 +6,12 @@ import 'package:genui/genui.dart';
 
 import '../sources/default_registries.dart';
 import 'data_source_item.dart';
+import 'inspector_items.dart';
 import 'json_table_item.dart';
 import 'key_value_item.dart';
 import 'layout_safety.dart';
 import 'network_request_details_item.dart';
+import 'property_editor_item.dart';
 import 'simple_charts_item.dart';
 import 'time_series_chart_item.dart';
 
@@ -46,6 +48,15 @@ Flutter app. Live data NEVER goes into your messages directly. Instead:
    locally in DevTools; actions that change the app ask the user for
    confirmation first.
 
+For Flutter apps, the inspector components (`WidgetTree`, `WidgetDetails`,
+`LayoutExplorer`, `WidgetProperties`, `InspectorControls`, `PropertyEditor`)
+render the real Inspector screen panes. They share one selection with each
+other, the device, and the `inspector.selection` data source, so e.g. a
+`WidgetTree` next to a `LayoutExplorer` or `PropertyEditor` is a working
+master/detail view with no bindings needed. `PropertyEditor` edits the
+selected widget's constructor arguments in the source code through the IDE
+(it needs an IDE connected via DTD and tells the user if one is missing).
+
 Every `DataSource` must be part of the component tree (e.g. a child of the
 root `Column`) to be active.
 
@@ -73,6 +84,8 @@ Catalog buildDevToolsCatalog(GenUiRegistries registries) {
       barChartCatalogItem(),
       pieChartCatalogItem(),
       statCatalogItem(),
+      ...inspectorCatalogItems(),
+      propertyEditorCatalogItem(),
     ],
     systemPromptFragments: [
       ...basic.systemPromptFragments,
