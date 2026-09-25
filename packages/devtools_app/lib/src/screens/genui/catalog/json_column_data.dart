@@ -223,4 +223,13 @@ final jsonColumnPresets = <String, List<JsonObject>>{
     {'field': 'dartHeapBytes', 'title': 'Dart heap', 'format': 'bytes'},
     {'field': 'externalBytes', 'title': 'External', 'format': 'bytes'},
   ],
+  'cpu.functions': [
+    {'field': 'name', 'title': 'Function', 'wide': true},
+    {'field': 'url', 'title': 'Source', 'wide': true},
+    {'field': 'category', 'title': 'Category', 'width': 80},
+    {'field': 'selfPct', 'title': 'Self %', 'format': 'percent', 'width': 80},
+    {'field': 'totalPct', 'title': 'Total %', 'format': 'percent', 'width': 80},
+    {'field': 'selfMs', 'title': 'Self time', 'format': 'duration'},
+    {'field': 'totalMs', 'title': 'Total time', 'format': 'duration'},
+  ],
 };

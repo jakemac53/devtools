@@ -10,6 +10,7 @@ import 'json_table_item.dart';
 import 'key_value_item.dart';
 import 'layout_safety.dart';
 import 'network_request_details_item.dart';
+import 'simple_charts_item.dart';
 import 'time_series_chart_item.dart';
 
 /// The catalog id for the DevTools GenUI catalog.
@@ -31,8 +32,11 @@ Flutter app. Live data NEVER goes into your messages directly. Instead:
    `sort_by(@, &durationMs)[-10:]`, `length(@)`,
    `[].{uri: uri, ms: durationMs, _ref: _ref}`). Validate expressions with
    `previewDataSource` first.
-3. Bind visual components (`JsonTable`, `TimeSeriesChart`, `KeyValue`,
-   `Text`, ...) to `targetPath` with `{"path": "..."}` bindings.
+3. Bind visual components (`JsonTable`, `TimeSeriesChart`, `BarChart`,
+   `PieChart`, `Stat`, `KeyValue`, `Text`, ...) to `targetPath` with
+   `{"path": "..."}` bindings. Use `TimeSeriesChart` for values over time,
+   `BarChart` for ranked top-N rows, `PieChart` for shares of a total, and
+   `Stat` for headline numbers (several in a `Row` make a dashboard).
 4. For master/detail, give a `JsonTable` a `selectionPath` and bind a detail
    component (or a `DataSource` param) to that path.
 5. Keep `_ref` fields when projecting rows that feed composite components like
@@ -66,6 +70,9 @@ Catalog buildDevToolsCatalog(GenUiRegistries registries) {
       timeSeriesChartCatalogItem(),
       keyValueCatalogItem(),
       networkRequestDetailsCatalogItem(registries.refs),
+      barChartCatalogItem(),
+      pieChartCatalogItem(),
+      statCatalogItem(),
     ],
     systemPromptFragments: [
       ...basic.systemPromptFragments,

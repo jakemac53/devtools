@@ -136,66 +136,33 @@ class _Toolbar extends StatelessWidget {
   }
 
   Future<void> _showSaveDialog(BuildContext context) async {
-    final textController = TextEditingController();
-    void submit(BuildContext context) =>
-        Navigator.of(context).pop(textController.text);
     final name = await showDialog<String>(
       context: context,
-      builder: (context) => DevToolsDialog(
-        title: const DialogTitleText('Save page'),
-        content: SizedBox(
-          width: 400,
-          child: TextField(
-            controller: textController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Name',
-              helperText: 'Saving with an existing name replaces that page.',
-            ),
-            onSubmitted: (_) => submit(context),
-          ),
-        ),
-        actions: [
-          const DialogCancelButton(),
-          DialogTextButton(
-            onPressed: () => submit(context),
-            child: const Text('SAVE'),
-          ),
-        ],
+      builder: (context) => const _TextInputDialog(
+        title: 'Save page',
+        submitLabel: 'SAVE',
+        width: 400,
+        labelText: 'Name',
+        helperText: 'Saving with an existing name replaces that page.',
+        submitOnEnter: true,
       ),
     );
-    textController.dispose();
     if (name == null || name.trim().isEmpty) return;
     await controller.saveCurrentPage(name);
     notificationService.push('Saved page "${name.trim()}".');
   }
 
   Future<void> _showLoadDialog(BuildContext context) async {
-    final textController = TextEditingController();
     final spec = await showDialog<String>(
       context: context,
-      builder: (context) => DevToolsDialog(
-        title: const DialogTitleText('Load GenUI spec'),
-        content: SizedBox(
-          width: 600,
-          child: TextField(
-            controller: textController,
-            maxLines: 16,
-            decoration: const InputDecoration(
-              hintText: 'Paste a spec copied with "Copy spec"',
-            ),
-          ),
-        ),
-        actions: [
-          const DialogCancelButton(),
-          DialogTextButton(
-            onPressed: () => Navigator.of(context).pop(textController.text),
-            child: const Text('LOAD'),
-          ),
-        ],
+      builder: (context) => const _TextInputDialog(
+        title: 'Load GenUI spec',
+        submitLabel: 'LOAD',
+        width: 600,
+        hintText: 'Paste a spec copied with "Copy spec"',
+        maxLines: 16,
       ),
     );
-    textController.dispose();
     if (spec == null || spec.trim().isEmpty) return;
     try {
       controller.loadSpec(spec);
@@ -205,6 +172,72 @@ class _Toolbar extends StatelessWidget {
         isReportable: false,
       );
     }
+  }
+}
+
+/// A dialog with a single text field that pops with the entered text.
+///
+/// The dialog owns its [TextEditingController] so that the controller lives
+/// as long as the [TextField], including during the route's exit animation.
+class _TextInputDialog extends StatefulWidget {
+  const _TextInputDialog({
+    required this.title,
+    required this.submitLabel,
+    required this.width,
+    this.labelText,
+    this.helperText,
+    this.hintText,
+    this.maxLines = 1,
+    this.submitOnEnter = false,
+  });
+
+  final String title;
+  final String submitLabel;
+  final double width;
+  final String? labelText;
+  final String? helperText;
+  final String? hintText;
+  final int maxLines;
+  final bool submitOnEnter;
+
+  @override
+  State<_TextInputDialog> createState() => _TextInputDialogState();
+}
+
+class _TextInputDialogState extends State<_TextInputDialog> {
+  final _text = TextEditingController();
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  void _submit() => Navigator.of(context).pop(_text.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return DevToolsDialog(
+      title: DialogTitleText(widget.title),
+      content: SizedBox(
+        width: widget.width,
+        child: TextField(
+          controller: _text,
+          autofocus: true,
+          maxLines: widget.maxLines,
+          decoration: InputDecoration(
+            labelText: widget.labelText,
+            helperText: widget.helperText,
+            hintText: widget.hintText,
+          ),
+          onSubmitted: widget.submitOnEnter ? (_) => _submit() : null,
+        ),
+      ),
+      actions: [
+        const DialogCancelButton(),
+        DialogTextButton(onPressed: _submit, child: Text(widget.submitLabel)),
+      ],
+    );
   }
 }
 

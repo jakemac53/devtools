@@ -146,7 +146,8 @@ Color? parseHexColor(Object? value) {
   return hex.length == 8 && parsed != null ? Color(parsed) : null;
 }
 
-const _palette = [
+/// Default colors for chart series, bars, and slices.
+const genUiChartPalette = [
   Color(0xff33b5e5),
   Color(0xffff9800),
   Color(0xff4caf50),
@@ -272,7 +273,7 @@ class JsonChartController extends ChartController {
   }
 
   static Color colorFor(ChartSeries s, int index) =>
-      s.color ?? _palette[index % _palette.length];
+      s.color ?? genUiChartPalette[index % genUiChartPalette.length];
 
   final List<ChartSeries> series;
   final String timestampField;

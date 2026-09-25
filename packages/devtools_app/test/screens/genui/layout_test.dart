@@ -58,7 +58,63 @@ void main() {
     'weight': ?weight,
   };
 
+  Map<String, Object?> bar(String id) => {
+    'id': id,
+    'component': 'BarChart',
+    'data': rows,
+    'valueField': 'bytes',
+    'format': 'bytes',
+  };
+
+  Map<String, Object?> pie(String id) => {
+    'id': id,
+    'component': 'PieChart',
+    'data': rows,
+    'valueField': 'bytes',
+  };
+
+  Map<String, Object?> stat(String id) => {
+    'id': id,
+    'component': 'Stat',
+    'label': 'Total',
+    'value': 300,
+    'format': 'bytes',
+    'history': [1, 3, 2, 5],
+  };
+
   final layouts = <String, List<Map<String, Object?>>>{
+    'Row of simple charts': [
+      {
+        'id': 'root',
+        'component': 'Row',
+        'children': ['b', 'p', 's'],
+      },
+      bar('b'),
+      pie('p'),
+      stat('s'),
+    ],
+    'Column of simple charts': [
+      {
+        'id': 'root',
+        'component': 'Column',
+        'children': ['b', 'p', 's'],
+      },
+      bar('b'),
+      pie('p'),
+      stat('s'),
+    ],
+    'horizontal List of stats and charts': [
+      {
+        'id': 'root',
+        'component': 'List',
+        'direction': 'horizontal',
+        'children': ['s1', 's2', 'b', 'p'],
+      },
+      stat('s1'),
+      stat('s2'),
+      bar('b'),
+      pie('p'),
+    ],
     'Row of data components without weights': [
       {
         'id': 'root',

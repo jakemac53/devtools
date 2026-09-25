@@ -5,6 +5,7 @@
 import '../data/actions.dart';
 import '../data/data_source.dart';
 import '../data/ref_store.dart';
+import 'cpu_sources.dart';
 import 'memory_sources.dart';
 import 'network_sources.dart';
 import 'vm_sources.dart';
@@ -21,11 +22,13 @@ class GenUiRegistries {
     final dataSources = DataSourceRegistry(refs: refs)
       ..registerAll(vmDataSources())
       ..registerAll(networkDataSources())
-      ..registerAll(memoryDataSources());
+      ..registerAll(memoryDataSources())
+      ..registerAll(cpuDataSources());
     final actions = ActionRegistry(refs: refs)
       ..registerAll(vmActions())
       ..registerAll(networkActions())
-      ..registerAll(memoryActions());
+      ..registerAll(memoryActions())
+      ..registerAll(cpuActions());
     return GenUiRegistries._(refs, dataSources, actions);
   }
 

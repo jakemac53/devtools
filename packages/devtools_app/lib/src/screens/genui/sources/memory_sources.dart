@@ -212,8 +212,7 @@ List<DataSourceDescriptor> memoryDataSources() => [
       '[:20]',
       "[?classType=='project']",
       "[?contains(class, 'Widget')] | sort_by(@, &instances) | reverse(@)",
-      '{classes: length(@), bytes: sum([].totalBytes), '
-          'instances: sum([].instances)}',
+      '{classes: length(@), bytes: sum([].totalBytes)}',
     ],
     open: (context, params) {
       final intervalMs = (params['intervalMs'] as num?)?.toInt();

@@ -177,12 +177,15 @@ The prototype is structured so that each part of the MCP App path swaps in witho
 - **`memory.classes` data source.** Early use showed the agent could only report total memory. This source adds per-class instance counts and sizes from the VM allocation profile. It reuses the Memory screen's `ProfileRecord` / `HeapClassName` models without touching `ProfilePaneController`. It adds a `memory.refreshClasses` action and a `memory.classes` table preset. This was about 150 lines plus tests, which supports the claim that new domains are cheap to add.
 - **Flutter web app fix, unrelated to GenUI.** For Flutter web apps, DWDS's `_flutter.listViews` returns a placeholder view with no `FlutterView` type. That made `queryDisplayRefreshRate` and `rasterCacheMetrics` throw. Both now skip the engine view queries for web apps.
 - **First manual run.** The prototype has been run as a Linux desktop app connected to another DevTools instance.
+- **Layout safety.** Complex generated layouts triggered `'!semantics.parentDataDirty'` assertion cascades. The causes were data components receiving unbounded width inside a Row or horizontal List, and `weight` children inside the unbounded root Column. `catalog/layout_safety.dart` wraps the basic Row, Column, and List components so that flex is dropped on unbounded axes, and data components get a default width when unbounded. `test/screens/genui/layout_test.dart` covers these cases.
+- **Persistence.** The API key (optional, stored in plain text) and named saved pages are kept in DevTools' existing `Storage`, so no new plugin dependency is needed.
+- **CPU profiler data sources.** `cpu.functions` gives per-function self/total samples, like the method table. `cpu.activity` gives time-bucketed samples by frame category and user tag, for charts. `cpu.status` reports recording and busy state. The actions are `cpu.startRecording`, `cpu.stopRecording`, and `cpu.clear`. The sources read either a rolling `live` window straight from the VM sample buffer (no recording needed) or the last `recording` from `ProfilerScreenController`. Both paths reuse `CpuProfileData`. No refactor of the profiler controllers was needed; the flame chart and call tree composites still need one.
 
 ## Recommended next steps
 
 1. **Verify the web/wasm build** with genkit (`flutter build web --wasm`). Fall back to a REST transport if needed.
 2. **More manual QA against real apps** with a live LLM. Tune the system prompt and presets from the transcripts.
 3. **Decide on dependencies:** full `genui` vs. an `a2ui_core`-only renderer, plus the intl bump and its impact on g3.
-4. **Add domains:** logging (easy), CPU profiler (medium refactor), frame stats.
+4. **Add domains:** logging (easy), CPU call tree/flame chart composites (medium refactor), frame stats (enables jank-vs-CPU views).
 5. **Prototype the MCP App path:** the host transport plus the `VmServiceMessageChannel` tunnel via the Dart MCP server.
 6. **Persistence:** keep the last spec per app; build a gallery of saved specs.
