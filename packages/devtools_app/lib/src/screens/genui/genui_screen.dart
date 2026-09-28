@@ -22,6 +22,9 @@ class GenUiScreen extends Screen {
   static final id = ScreenMetaData.genUi.id;
 
   @override
+  bool get experimentEnabled => preferences.genUiEnabled.value;
+
+  @override
   Widget buildScreenBody(BuildContext context) => const GenUiScreenBody();
 }
 

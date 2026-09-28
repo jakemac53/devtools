@@ -376,6 +376,14 @@ abstract class Screen {
   /// Whether this screen works offline and should show in offline mode even if conditions are not met.
   final bool worksWithOfflineData;
 
+  /// For experimental screens, whether the experiment is enabled in the
+  /// "Experimental features" section of the DevTools settings.
+  ///
+  /// Screens that return false are hidden. Changes to the value only take
+  /// effect when the list of visible screens is regenerated, so the backing
+  /// setting must be listened to in `DevToolsAppState`.
+  bool get experimentEnabled => true;
+
   /// Whether this screen should display the isolate selector in the status
   /// line.
   ///
@@ -504,6 +512,13 @@ abstract class Screen {
   Screen screen,
 ) {
   _log.finest('shouldShowScreen: ${screen.screenId}');
+  if (!screen.experimentEnabled) {
+    _log.finest('screen experiment is disabled: returning false');
+    return (
+      show: false,
+      disabledReason: ScreenDisabledReason.experimentDisabled,
+    );
+  }
   if (offlineDataController.showingOfflineData.value) {
     _log.finest('for offline mode: returning ${screen.worksWithOfflineData}');
     return (
@@ -608,6 +623,9 @@ enum ScreenDisabledReason {
   requiresFlutter('only supports Flutter applications.'),
   requiresAdvancedDeveloperMode(
     'only works when Advanced Developer Mode is enabled',
+  ),
+  experimentDisabled(
+    'is experimental and must be enabled in Settings > Experimental features.',
   ),
   requiresDebuggableWebApp(
     'only works with web applications with full debugging support.',

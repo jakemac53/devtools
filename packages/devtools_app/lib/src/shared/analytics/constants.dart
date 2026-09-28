@@ -126,6 +126,7 @@ const analytics = 'analytics';
 //  https://github.com/flutter/devtools/issues/9216 is resolved.
 const vmDeveloperMode = 'vmDeveloperMode';
 const wasm = 'wasm';
+const genUi = 'genUi';
 const verboseLogging = 'verboseLogging';
 const inspectorHoverEvalMode = 'inspectorHoverEvalMode';
 const inspectorAutoRefreshEnabled = 'inspectorAutoRefreshEnabled';

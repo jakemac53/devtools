@@ -37,7 +37,10 @@ const _thirdPartyPathSegment = 'third_party';
 /// DevTools preferences for experimental features.
 enum _ExperimentPreferences {
   /// Whether a user has opted out of the dart2wasm experiment.
-  wasmOptOut;
+  wasmOptOut,
+
+  /// Whether the experimental GenUI screen is enabled.
+  genUi;
 
   String get storageKey {
     if (name == 'wasm') {
@@ -93,6 +96,10 @@ class PreferencesController extends DisposableController
   /// dart2js + canvaskit
   final wasmEnabled = ValueNotifier<bool>(false);
 
+  /// Whether the experimental GenUI screen is enabled, where an agent builds
+  /// custom DevTools screens from DevTools components.
+  final genUiEnabled = ValueNotifier<bool>(false);
+
   final verboseLoggingEnabled = ValueNotifier<bool>(
     Logger.root.level == verboseLoggingLevel,
   );
@@ -124,6 +131,7 @@ class PreferencesController extends DisposableController
     await _initDarkMode();
     await _initAdvancedDeveloperMode();
     await _initWasmEnabled();
+    await _initGenUiEnabled();
     await _initVerboseLogging();
 
     await cpuProfiler.init();
@@ -167,6 +175,21 @@ class PreferencesController extends DisposableController
         storage.setValue(
           _UiPreferences.vmDeveloperMode.storageKey,
           '${advancedDeveloperModeEnabled.value}',
+        ),
+      );
+    });
+  }
+
+  Future<void> _initGenUiEnabled() async {
+    genUiEnabled.value = await boolValueFromStorage(
+      _ExperimentPreferences.genUi.storageKey,
+      defaultsTo: false,
+    );
+    addAutoDisposeListener(genUiEnabled, () {
+      safeUnawaited(
+        storage.setValue(
+          _ExperimentPreferences.genUi.storageKey,
+          '${genUiEnabled.value}',
         ),
       );
     });
@@ -305,6 +328,13 @@ class PreferencesController extends DisposableController
   void toggleWasmEnabled(bool? enable) {
     if (enable != null) {
       wasmEnabled.value = enable;
+    }
+  }
+
+  /// Change the value of the GenUI experiment setting.
+  void toggleGenUiEnabled(bool? enable) {
+    if (enable != null) {
+      genUiEnabled.value = enable;
     }
   }
 

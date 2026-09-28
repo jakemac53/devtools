@@ -286,11 +286,13 @@ class DevToolsAppState extends State<DevToolsApp> with AutoDisposeMixin {
         vmServiceUri != null && vmServiceUri.isNotEmpty;
 
     Widget scaffoldBuilder() {
-      // Force regeneration of visible screens when Advanced Developer Mode is
-      // enabled and when the list of available extensions change.
+      // Force regeneration of visible screens when Advanced Developer Mode or
+      // an experimental screen is enabled and when the list of available
+      // extensions change.
       return MultiValueListenableBuilder(
         listenables: [
           preferences.advancedDeveloperModeEnabled,
+          preferences.genUiEnabled,
           extensionService.currentExtensions,
         ],
         builder: (_, _, child) {
@@ -745,11 +747,11 @@ List<DevToolsScreen> defaultScreens({
       DTDToolsScreen(),
       createController: (_) => DTDToolsController(),
     ),
-    if (FeatureFlags.genUi.isEnabled)
-      DevToolsScreen<GenUiController>(
-        GenUiScreen(),
-        createController: (_) => GenUiController(),
-      ),
+    // Only shown when enabled in Settings > Experimental features.
+    DevToolsScreen<GenUiController>(
+      GenUiScreen(),
+      createController: (_) => GenUiController(),
+    ),
   ];
 }
 

@@ -55,7 +55,7 @@ flowchart LR
 
 Changes outside the genui directory:
 
-- **Screen registration:** [app.dart](../../packages/devtools_app/lib/src/app.dart), [screen.dart](../../packages/devtools_app/lib/src/shared/framework/screen.dart) (`ScreenMetaData.genUi`), and [feature_flags.dart](../../packages/devtools_app/lib/src/shared/feature_flags.dart) (`FeatureFlags.genUi`).
+- **Screen registration:** [app.dart](../../packages/devtools_app/lib/src/app.dart), [screen.dart](../../packages/devtools_app/lib/src/shared/framework/screen.dart) (`ScreenMetaData.genUi`), [preferences.dart](../../packages/devtools_app/lib/src/shared/preferences/preferences.dart) (`genUiEnabled`), and [settings_dialog.dart](../../packages/devtools_app/lib/src/framework/scaffold/settings_dialog.dart) (the "Enable GenUI" toggle under Experimental features).
 - **One refactor:** [network_request_inspector.dart](../../packages/devtools_app/lib/src/screens/network/network_request_inspector.dart).
 - **New package:** [packages/jmespath](../../packages/jmespath).
 
@@ -164,7 +164,7 @@ The prototype is structured so that each part of the MCP App path swaps in witho
 
 ## How to run
 
-1. Run DevTools with experiments enabled, e.g. `--dart-define=enable_experiments=true`, and connect to an app.
+1. Run DevTools, turn on **Settings > Experimental features > Enable GenUI**, and connect to an app.
 2. Open the **GenUI** tab (✨ icon).
 3. Paste a Gemini API key into the chat panel.
 4. Try prompts like: *"Show a table of network requests over 100ms with a details pane for the selected one"*, *"Chart heap usage and add a GC button"*, *"Show isolate memory and a hot-reload button"*, *"Show the top 25 classes by memory, my project's classes separately, and refresh/GC buttons"*.

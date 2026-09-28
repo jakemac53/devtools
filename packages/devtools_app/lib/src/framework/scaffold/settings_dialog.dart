@@ -91,6 +91,18 @@ class SettingsDialog extends StatelessWidget {
               gaItem: gac.wasm,
             ),
           ),
+          Flexible(
+            child: CheckboxSetting(
+              title: 'Enable GenUI',
+              description:
+                  'Adds a GenUI screen where an AI agent builds custom '
+                  'DevTools screens from DevTools components.',
+              notifier: preferences.genUiEnabled,
+              onChanged: preferences.toggleGenUiEnabled,
+              gaScreen: gac.settingsDialog,
+              gaItem: gac.genUi,
+            ),
+          ),
           const SizedBox(height: largeSpacing),
           ...dialogSubHeader(theme, 'Troubleshooting'),
           const _VerboseLoggingSetting(),
