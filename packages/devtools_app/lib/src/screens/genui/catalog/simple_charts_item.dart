@@ -17,7 +17,6 @@ import 'layout_safety.dart';
 import 'time_series_chart_item.dart';
 
 /// Reads [field] from [row]; dots traverse nested maps (e.g. `stats.bytes`).
-@visibleForTesting
 Object? readJsonField(Object? row, String field) {
   Object? current = row;
   for (final segment in field.split('.')) {

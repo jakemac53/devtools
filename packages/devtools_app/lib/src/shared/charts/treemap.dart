@@ -677,6 +677,7 @@ class TreemapNode extends TreeNode<TreemapNode> {
     this.showDiff = false,
     this.backgroundColor,
     this.caption,
+    this.sizeFormatter,
   });
 
   final String name;
@@ -689,6 +690,12 @@ class TreemapNode extends TreeNode<TreemapNode> {
   final bool showDiff;
   final Color? backgroundColor;
   final String? caption;
+
+  /// Formats [byteSize] for display.
+  ///
+  /// Defaults to formatting it as a number of bytes. Provide this when the
+  /// treemap sizes represent something else, e.g. CPU samples.
+  final String Function(int size)? sizeFormatter;
 
   int get unsignedByteSize => byteSize.abs();
 
@@ -750,6 +757,8 @@ class TreemapNode extends TreeNode<TreemapNode> {
   String prettyByteSize() {
     // Negative sign isn't explicitly added since a regular print of a negative number includes it.
     final plusSign = showDiff && byteSize > 0 ? '+' : '';
+    final formatter = sizeFormatter;
+    if (formatter != null) return '$plusSign${formatter(byteSize)}';
     return '$plusSign${prettyPrintBytes(byteSize, includeUnit: true)}';
   }
 
