@@ -5,8 +5,8 @@
 import 'package:devtools_app/src/screens/genui/catalog/json_column_data.dart';
 import 'package:devtools_app/src/screens/genui/catalog/simple_charts_item.dart';
 import 'package:devtools_app_shared/ui.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
   theme: themeFor(isDarkTheme: false, ideTheme: IdeTheme(), theme: ThemeData()),

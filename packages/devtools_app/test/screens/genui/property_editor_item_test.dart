@@ -59,9 +59,6 @@ class _FakeEditorClient extends Fake implements EditorClient {
   final editableArgumentsApiIsRegistered = ValueNotifier(true);
 
   @override
-  bool get isDtdClosed => false;
-
-  @override
   Stream<ActiveLocationChangedEvent> get activeLocationChangedStream =>
       events.stream;
 
@@ -158,7 +155,10 @@ void main() {
       editor.pending[pos1]!.complete(_result('Text'));
       await shown;
       expect(controller.widgetName, 'Text');
-      expect(controller.allProperties.map((p) => p.name), ['data']);
+      expect(
+        controller.editableWidgetData.value!.properties.map((p) => p.name),
+        ['data'],
+      );
       expect(controller.waitingForFirstEvent, isFalse);
 
       controller.clearWidget();

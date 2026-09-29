@@ -10,10 +10,10 @@ import 'package:devtools_app/src/screens/genui/data/data_source.dart';
 import 'package:devtools_app/src/screens/genui/genui_spec.dart';
 import 'package:devtools_app/src/screens/genui/sources/default_registries.dart';
 import 'package:devtools_app_shared/ui.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// End-to-end test: a saved spec (no LLM) rendered with the DevTools catalog,
 /// with live data flowing from a data source through JMESPath into

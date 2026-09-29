@@ -5,8 +5,8 @@
 import 'dart:async';
 
 import 'package:devtools_app_shared/ui.dart';
-import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../shared/globals.dart';
 import '../data/actions.dart';

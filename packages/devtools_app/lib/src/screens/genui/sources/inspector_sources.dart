@@ -9,14 +9,14 @@ import 'package:flutter/rendering.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
 
 import '../../../service/service_extensions.dart' as extensions;
-import '../../../shared/console/eval/inspector_tree_v2.dart';
+import '../../../shared/console/eval/inspector_tree.dart';
 import '../../../shared/diagnostics/diagnostics_node.dart';
 import '../../../shared/diagnostics/primitives/instance_ref.dart';
 import '../../../shared/globals.dart';
-import '../../inspector_shared/inspector_screen_controller.dart';
-import '../../inspector_v2/inspector_controller.dart';
-import '../../inspector_v2/inspector_data_models.dart';
-import '../../inspector_v2/inspector_tree_controller.dart';
+import '../../inspector/inspector_controller.dart';
+import '../../inspector/inspector_data_models.dart';
+import '../../inspector/inspector_screen_controller.dart';
+import '../../inspector/inspector_tree_controller.dart';
 import '../data/actions.dart';
 import '../data/data_source.dart';
 import '../data/json_utils.dart';
@@ -37,7 +37,7 @@ InspectorController inspectorController() {
   }
   return screenControllers
       .lookup<InspectorScreenController>()
-      .v2InspectorController;
+      .inspectorController;
 }
 
 /// A headless [InspectorControllerClient].

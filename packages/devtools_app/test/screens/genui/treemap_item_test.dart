@@ -5,8 +5,8 @@
 import 'package:devtools_app/src/screens/genui/catalog/json_column_data.dart';
 import 'package:devtools_app/src/screens/genui/catalog/treemap_item.dart';
 import 'package:devtools_app/src/shared/charts/treemap.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 Map<String, Object?> _sizes(TreemapNode node) => {
   for (final child in node.children)

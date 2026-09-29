@@ -3,17 +3,17 @@
 // found in the LICENSE file or at https://developers.google.com/open-source/licenses/bsd.
 
 import 'package:devtools_app_shared/ui.dart';
-import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:material_ui/material_ui.dart';
 
-import '../../inspector_shared/inspector_controls.dart';
-import '../../inspector_v2/inspector_controller.dart';
-import '../../inspector_v2/inspector_tree_controller.dart';
-import '../../inspector_v2/layout_explorer/box/box.dart';
-import '../../inspector_v2/layout_explorer/flex/flex.dart';
-import '../../inspector_v2/widget_details.dart';
-import '../../inspector_v2/widget_properties/properties_view.dart';
+import '../../inspector/inspector_controller.dart';
+import '../../inspector/inspector_controls.dart';
+import '../../inspector/inspector_tree_controller.dart';
+import '../../inspector/layout_explorer/box/box.dart';
+import '../../inspector/layout_explorer/flex/flex.dart';
+import '../../inspector/widget_details.dart';
+import '../../inspector/widget_properties/properties_view.dart';
 import '../data/json_utils.dart';
 import '../sources/inspector_sources.dart';
 import 'layout_safety.dart';
@@ -174,7 +174,6 @@ class _LayoutExplorer extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.all(denseSpacing),
             child: BoxLayoutExplorerWidget(
-              controller,
               layoutProperties: properties.layoutProperties,
               selectedNode: node,
             ),

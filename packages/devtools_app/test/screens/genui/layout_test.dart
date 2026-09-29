@@ -10,9 +10,9 @@ import 'package:devtools_app/src/screens/genui/genui_screen.dart';
 import 'package:devtools_app/src/screens/genui/genui_spec.dart';
 import 'package:devtools_app/src/screens/genui/sources/default_registries.dart';
 import 'package:devtools_app_shared/ui.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Layouts that an agent is likely to generate must never throw, regardless
 /// of whether it remembered to set sizes or weights.

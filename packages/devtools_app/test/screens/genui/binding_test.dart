@@ -9,10 +9,10 @@ import 'package:devtools_app/src/screens/genui/catalog/data_source_item.dart';
 import 'package:devtools_app/src/screens/genui/data/actions.dart';
 import 'package:devtools_app/src/screens/genui/data/data_source.dart';
 import 'package:devtools_app/src/screens/genui/sources/default_registries.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   late GenUiRegistries registries;

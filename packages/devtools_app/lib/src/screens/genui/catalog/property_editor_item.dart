@@ -7,9 +7,9 @@ import 'dart:async';
 import 'package:devtools_app_shared/ui.dart';
 import 'package:devtools_app_shared/utils.dart';
 import 'package:dtd/dtd.dart';
-import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../shared/diagnostics/diagnostics_node.dart';
 import '../../../shared/editor/api_classes.dart';
@@ -18,7 +18,7 @@ import '../../../shared/globals.dart';
 import '../../../shared/ui/common_widgets.dart';
 import '../../../standalone_ui/ide_shared/property_editor/property_editor_controller.dart';
 import '../../../standalone_ui/ide_shared/property_editor/property_editor_view.dart';
-import '../../inspector_v2/inspector_controller.dart';
+import '../../inspector/inspector_controller.dart';
 import '../data/json_utils.dart';
 import 'inspector_items.dart';
 import 'layout_safety.dart';
@@ -60,7 +60,8 @@ PropertyEditorTarget? propertyEditorTargetFor(RemoteDiagnosticsNode? node) {
 DartToolingDaemon? _sharedDtd;
 EditorClient? _sharedEditorClient;
 
-/// Returns an [EditorClient] for [dtd], shared by all GenUI property editors.
+/// Returns an [EditorClient] for the current [dtd] connection, shared by all
+/// GenUI property editors.
 ///
 /// A DTD connection may only listen to each stream once, so a single client
 /// is shared per connection.
@@ -68,7 +69,7 @@ EditorClient _editorClientFor(DartToolingDaemon dtd) {
   if (!identical(dtd, _sharedDtd) || _sharedEditorClient == null) {
     _sharedEditorClient?.dispose();
     _sharedDtd = dtd;
-    _sharedEditorClient = EditorClient(dtd);
+    _sharedEditorClient = EditorClient(dtdManager);
   }
   return _sharedEditorClient!;
 }
@@ -322,18 +323,11 @@ class _GenUiPropertyEditorState extends State<_GenUiPropertyEditor>
         return MultiValueListenableBuilder(
           listenables: [
             controller.editorClient.editableArgumentsApiIsRegistered,
-            controller.shouldReconnect,
             _selectionProblem,
           ],
           builder: (context, values, _) {
             final registered = values[0] as bool;
-            final shouldReconnect = values[1] as bool;
-            final selectionProblem = values[2] as String?;
-            if (shouldReconnect) {
-              return const _Message(
-                'The connection to the Dart Tooling Daemon was closed.',
-              );
-            }
+            final selectionProblem = values[1] as String?;
             if (!registered) {
               return const _Message(
                 'Waiting for an IDE with the Dart extension to provide the '

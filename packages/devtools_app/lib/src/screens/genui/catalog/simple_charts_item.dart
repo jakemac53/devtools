@@ -6,9 +6,9 @@ import 'dart:math' as math;
 
 import 'package:devtools_app_shared/ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:genui/genui.dart';
 import 'package:json_schema_builder/json_schema_builder.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../data/json_utils.dart';
 import 'bound_value.dart';

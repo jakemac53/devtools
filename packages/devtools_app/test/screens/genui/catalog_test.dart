@@ -10,8 +10,8 @@ import 'package:devtools_app/src/screens/genui/catalog/json_table_item.dart';
 import 'package:devtools_app/src/screens/genui/catalog/key_value_item.dart';
 import 'package:devtools_app/src/screens/genui/catalog/time_series_chart_item.dart';
 import 'package:devtools_app/src/screens/genui/genui_spec.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('JsonColumnData', () {

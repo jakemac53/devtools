@@ -4,8 +4,8 @@
 
 import 'package:devtools_app/src/screens/genui/sources/default_registries.dart';
 import 'package:devtools_app/src/screens/genui/sources/inspector_sources.dart';
-import 'package:devtools_app/src/screens/inspector_v2/inspector_data_models.dart';
-import 'package:devtools_app/src/shared/console/eval/inspector_tree_v2.dart';
+import 'package:devtools_app/src/screens/inspector/inspector_data_models.dart';
+import 'package:devtools_app/src/shared/console/eval/inspector_tree.dart';
 import 'package:devtools_app/src/shared/diagnostics/diagnostics_node.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -117,6 +117,7 @@ void main() {
           widgetProperties: const [],
           renderProperties: const [],
           layoutProperties: null,
+          creationLocation: null,
         )),
         isNull,
       );
@@ -148,6 +149,7 @@ void main() {
           _property('additionalConstraints', 'BoxConstraints(w=100.0)'),
         ],
         layoutProperties: LayoutProperties(node),
+        creationLocation: null,
       ))!;
       expect(selection['id'], 's');
       expect(selection['widget'], 'SizedBox');
