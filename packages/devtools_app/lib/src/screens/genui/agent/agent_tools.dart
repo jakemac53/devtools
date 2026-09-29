@@ -47,6 +47,12 @@ class GenUiAgentTool {
 /// if there are none.
 typedef SurfaceStateProvider = Object? Function(String? surfaceId);
 
+/// The default number of list items returned by the `queryDataSource` tool.
+const defaultQueryLimit = 100;
+
+/// The maximum number of list items the `queryDataSource` tool will return.
+const maxQueryLimit = 500;
+
 /// Builds the discovery tools for [registries].
 List<GenUiAgentTool> buildGenUiAgentTools(
   GenUiRegistries registries, {
@@ -118,6 +124,82 @@ List<GenUiAgentTool> buildGenUiAgentTools(
             id,
             params: params is Map ? params.cast<String, Object?>() : const {},
             expression: input['expression'] as String?,
+          ),
+        };
+      },
+    ),
+    GenUiAgentTool(
+      name: 'queryDataSource',
+      description:
+          'Returns a snapshot of the current value of a data source, '
+          'optionally transformed by a JMESPath expression. Use this to '
+          'answer questions about the app directly (e.g. "which class uses '
+          'the most memory?") without generating UI. Aggregate, filter, '
+          'sort and slice in the expression (e.g. sum(), length(), max_by(), '
+          'sort_by(...)[-10:]) to keep the result small.\n'
+          'If the result is a list it is paginated: you get {items, offset, '
+          'totalLength, nextOffset?}. To read the next page, repeat the same '
+          'call with `offset` set to `nextOffset`. Every call re-queries the '
+          'live data, so rows may shift between pages; sort in the '
+          'expression for a stable order. Other results are returned as '
+          '{value}.',
+      inputJsonSchema: {
+        'type': 'object',
+        'properties': {
+          'id': {'type': 'string'},
+          'params': {'type': 'object'},
+          'expression': {'type': 'string', 'description': 'JMESPath.'},
+          'offset': {
+            'type': 'integer',
+            'description':
+                'Index of the first list item to return (default 0).',
+          },
+          'limit': {
+            'type': 'integer',
+            'description':
+                'Page size for list results (default $defaultQueryLimit, '
+                'max $maxQueryLimit). Also limits nested lists.',
+          },
+        },
+        'required': ['id'],
+      },
+      handler: (input) async {
+        final id = requireString(input, 'id');
+        final params = input['params'];
+        final limitInput = input['limit'];
+        final limit = limitInput is num
+            ? limitInput.toInt().clamp(1, maxQueryLimit)
+            : defaultQueryLimit;
+        final offsetInput = input['offset'];
+        final offset = offsetInput is num ? offsetInput.toInt() : 0;
+        if (offset < 0) throw ArgumentError('`offset` must not be negative.');
+
+        final value = await dataSources
+            .query(
+              id,
+              params: params is Map ? params.cast<String, Object?>() : const {},
+              expression: input['expression'] as String?,
+            )
+            .first
+            .timeout(const Duration(seconds: 10));
+        if (value is List) {
+          final start = offset.clamp(0, value.length);
+          final end = (start + limit).clamp(0, value.length);
+          return {
+            'items': [
+              for (final item in value.sublist(start, end))
+                truncateForPreview(item, maxListLength: limit, maxDepth: 16),
+            ],
+            'offset': offset,
+            'totalLength': value.length,
+            if (end < value.length) 'nextOffset': end,
+          };
+        }
+        return {
+          'value': truncateForPreview(
+            value,
+            maxListLength: limit,
+            maxDepth: 16,
           ),
         };
       },

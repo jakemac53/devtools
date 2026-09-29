@@ -185,6 +185,7 @@ void main() {
         'listDataSources',
         'describeDataSource',
         'previewDataSource',
+        'queryDataSource',
         'listActions',
         'describeAction',
         'getSurfaceState',
@@ -207,6 +208,68 @@ void main() {
           'expression': '[0].id',
         }),
         {'value': 'a'},
+      );
+    });
+
+    test('queryDataSource returns full aggregated values', () async {
+      expect(
+        await tools['queryDataSource']!.call({
+          'id': 'test.items',
+          'params': {'min': 15},
+          'expression': 'sum([].ms)',
+        }),
+        {'value': 50},
+      );
+      // Unlike previewDataSource, lists are not truncated to 5 by default.
+      items.value = [for (var i = 0; i < 20; i++) _Item('$i', i)];
+      expect(
+        await tools['queryDataSource']!.call({
+          'id': 'test.items',
+          'expression': '[].id',
+        }),
+        {'items': hasLength(20), 'offset': 0, 'totalLength': 20},
+      );
+    });
+
+    test('queryDataSource paginates with offsets over live data', () async {
+      final query = tools['queryDataSource']!;
+      final args = {'id': 'test.items', 'expression': '[].id', 'limit': 2};
+      final first = await query(args) as Map;
+      expect(first, {
+        'items': ['a', 'b'],
+        'offset': 0,
+        'totalLength': 3,
+        'nextOffset': 2,
+      });
+      expect(await query({...args, 'offset': first['nextOffset']}), {
+        'items': ['c'],
+        'offset': 2,
+        'totalLength': 3,
+      });
+      // Every page re-queries the live data.
+      items.value = [...items.value, _Item('d', 1)];
+      expect(await query({...args, 'offset': 2}), {
+        'items': ['c', 'd'],
+        'offset': 2,
+        'totalLength': 4,
+      });
+      expect(await query({...args, 'offset': 10}), {
+        'items': isEmpty,
+        'offset': 10,
+        'totalLength': 4,
+      });
+      expect(await query({...args, 'offset': -1}), {
+        'error': contains('`offset`'),
+      });
+    });
+
+    test('queryDataSource reports bad expressions', () async {
+      expect(
+        await tools['queryDataSource']!.call({
+          'id': 'test.items',
+          'expression': '[?',
+        }),
+        {'error': contains('Invalid JMESPath')},
       );
     });
 
