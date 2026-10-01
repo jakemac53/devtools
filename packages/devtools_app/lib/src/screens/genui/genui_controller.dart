@@ -94,6 +94,18 @@ class GenUiController extends DevToolsScreenController
   Conversation? _conversation;
   final _conversationSubscriptions = <StreamSubscription<Object?>>[];
   StreamSubscription<Object?>? _surfaceSubscription;
+  StreamSubscription<Object?>? _submitSubscription;
+
+  /// The maximum number of events buffered for [takeExternalEvents].
+  static const maxExternalEvents = 100;
+
+  /// User interactions (and surface errors) that no embedded agent consumed,
+  /// oldest first. See [takeExternalEvents].
+  final _externalEvents = <Object?>[];
+
+  /// Collects surface errors while [applyMessages] runs, instead of
+  /// buffering them in [_externalEvents].
+  List<Object?>? _renderErrors;
 
   /// Completes once persisted settings have been loaded.
   Future<void> get persistedStateLoaded => _persistedStateLoaded.future;
@@ -105,7 +117,57 @@ class GenUiController extends DevToolsScreenController
     _surfaceSubscription = surfaceController.surfaceUpdates.listen((_) {
       _surfaceIds.value = surfaceController.activeSurfaceIds.toList();
     });
+    _submitSubscription = surfaceController.onSubmit.listen(_onSubmit);
     unawaited(_loadPersistedState());
+  }
+
+  /// Records interactions that are not handled locally (see
+  /// [DevToolsActionDelegate]) so an external agent can fetch them with
+  /// [takeExternalEvents]. When an embedded agent is configured, the
+  /// [Conversation] forwards them to it instead.
+  void _onSubmit(ChatMessage message) {
+    for (final part in message.parts.uiInteractionParts) {
+      Object? event;
+      try {
+        event = jsonDecode(part.interaction);
+      } on FormatException {
+        event = part.interaction;
+      }
+      final renderErrors = _renderErrors;
+      if (renderErrors != null && event is Map && event['error'] != null) {
+        renderErrors.add(event['error']);
+      } else if (_conversation == null) {
+        _externalEvents.add(event);
+      }
+    }
+    final overflow = _externalEvents.length - maxExternalEvents;
+    if (overflow > 0) _externalEvents.removeRange(0, overflow);
+  }
+
+  /// Returns and clears the user interactions buffered for an external agent.
+  List<Object?> takeExternalEvents() {
+    final events = [..._externalEvents];
+    _externalEvents.clear();
+    return events;
+  }
+
+  /// Applies A2UI [messages] to the surfaces, and returns the errors reported
+  /// while applying or validating them.
+  ///
+  /// Validation runs asynchronously, so this waits for [settle] before
+  /// collecting errors.
+  Future<List<Object?>> applyMessages(
+    List<core.A2uiMessage> messages, {
+    Duration settle = const Duration(milliseconds: 100),
+  }) async {
+    final errors = _renderErrors = [];
+    try {
+      messages.forEach(surfaceController.handleMessage);
+      await Future<void>.delayed(settle);
+      return errors;
+    } finally {
+      _renderErrors = null;
+    }
   }
 
   Future<void> _loadPersistedState() async {
@@ -317,6 +379,7 @@ class GenUiController extends DevToolsScreenController
   void dispose() {
     _disposeConversation();
     unawaited(_surfaceSubscription?.cancel());
+    unawaited(_submitSubscription?.cancel());
     surfaceController.dispose();
     _surfaceIds.dispose();
     _chatLog.dispose();

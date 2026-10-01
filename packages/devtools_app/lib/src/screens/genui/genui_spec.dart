@@ -43,8 +43,13 @@ JsonObject surfacesToSpec(Iterable<SurfaceDefinition> definitions) {
 /// messages) into A2UI messages.
 ///
 /// Throws a [FormatException] if [source] is not a valid spec.
-List<core.A2uiMessage> parseSpec(String source) {
-  final Object? decoded = jsonDecode(source);
+List<core.A2uiMessage> parseSpec(String source) =>
+    parseSpecJson(jsonDecode(source));
+
+/// Like [parseSpec], but takes already decoded JSON.
+///
+/// Throws a [FormatException] if [decoded] is not a valid spec.
+List<core.A2uiMessage> parseSpecJson(Object? decoded) {
   final Object? messages = switch (decoded) {
     {'messages': final Object? m} => m,
     List() => decoded,

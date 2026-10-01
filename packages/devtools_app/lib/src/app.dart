@@ -35,6 +35,7 @@ import 'screens/dtd/dtd_tools_controller.dart';
 import 'screens/dtd/dtd_tools_screen.dart';
 import 'screens/genui/genui_controller.dart';
 import 'screens/genui/genui_screen.dart';
+import 'screens/genui/service/genui_vm_service.dart';
 import 'screens/inspector/inspector_screen.dart';
 import 'screens/inspector/inspector_screen_controller.dart';
 import 'screens/logging/logging_controller.dart';
@@ -197,12 +198,33 @@ class DevToolsAppState extends State<DevToolsApp> with AutoDisposeMixin {
 
     releaseNotesController = ReleaseNotesController();
 
+    _genUiVmService = GenUiVmServiceRegistrar(
+      enabled: preferences.genUiEnabled,
+      connection: serviceConnection.serviceManager.connectedState,
+      currentService: () =>
+          serviceConnection.serviceManager.connectedState.value.connected
+          ? serviceConnection.serviceManager.service
+          : null,
+      handler: GenUiVmServiceHandler(
+        controller: () => screenControllers.isRegistered<GenUiController>()
+            ? screenControllers.lookup<GenUiController>()
+            : null,
+        enabled: () => preferences.genUiEnabled.value,
+        showGenUiScreen: () =>
+            routerDelegate.navigateIfNotCurrent(ScreenMetaData.genUi.id),
+      ),
+    );
+
     // Workaround for https://github.com/flutter/flutter/issues/155265.
     setUpTextFieldFocusFixHandler();
   }
 
+  /// Exposes GenUI to external agents through the app's VM service.
+  late final GenUiVmServiceRegistrar _genUiVmService;
+
   @override
   void dispose() {
+    _genUiVmService.dispose();
     FrameworkCore.dispose();
     // Workaround for https://github.com/flutter/flutter/issues/155265.
     removeTextFieldFocusFixHandler();
