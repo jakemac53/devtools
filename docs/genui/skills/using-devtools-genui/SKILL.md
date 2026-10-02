@@ -17,18 +17,32 @@ scripts or open your own VM service connection.
 
 <!-- TODO: Once dart_mcp_server 1.2.0 is released
 (https://github.com/dart-lang/ai/pull/697), call `genUi` directly and use the
-`listRegisteredServices` command instead of guessing the `s1.` prefix. -->
+`listRegisteredServices` command instead of guessing the `sN.` prefix. -->
 
-Services registered by VM service clients are called with a client prefix.
-Call the `vm_service` tool with `command: callMethod`, `method: s1.genUi` and
-the command in `arguments`:
+Services registered by VM service clients are called with a client prefix,
+`sN.`, where `N` is the ID the VM service gave DevTools' connection. IDs are
+assigned in connection order (including IDEs, DDS, other tools and earlier
+DevTools sessions), so the number varies. Call the `vm_service` tool with
+`command: callMethod`, `method: s1.genUi` and the command in `arguments`:
 
 ```json
 {"command": "callMethod", "method": "s1.genUi", "arguments": {"command": "help"}}
 ```
 
-If that returns "Method not found", try `s0.genUi`, `s2.genUi`, `s3.genUi`, and
-use whichever works for the rest of the session.
+A wrong prefix fails with an internal error such as "Null check operator used
+on a null value" (from `NamedLookup`) or "Method not found". Try `s2.genUi`,
+`s3.genUi`, ... one at a time (up to about `s10`), and use whichever works for
+the rest of the session. The prefix changes if DevTools reconnects or is
+reloaded, so probe again if a working prefix starts failing.
+
+Pass a command's params as top-level keys of `arguments`, next to `command`,
+not nested under `params`:
+
+```json
+{"command": "callMethod", "method": "s2.genUi",
+ "arguments": {"command": "queryDataSource", "id": "memory.classes",
+               "expression": "[:10].{class: class, bytes: totalBytes}"}}
+```
 
 ## Workflow
 
@@ -49,12 +63,12 @@ user for confirmation there. Never invent data source or action ids.
 
 ## Troubleshooting
 
-- **"Method not found" for every prefix**: DevTools is not connected to this
-  app, or the
-  GenUI experiment is off. Ask the user to open DevTools for the app (e.g.
-  from their IDE, or by pasting the app's VM service URI into DevTools'
-  connect dialog), then enable **Settings (gear icon) > Experimental features
-  > Enable GenUI**. Then retry.
+- **Every prefix fails**: DevTools is not connected to this app, or the GenUI
+  experiment is off. Ask the user to open DevTools for the app (e.g. from
+  their IDE, or by pasting the app's VM service URI into DevTools' connect
+  dialog), then enable **Settings (gear icon) > Experimental features >
+  Enable GenUI**, and reload the DevTools page if it still fails. Then probe
+  the prefixes again.
 - **"The GenUI experiment is disabled"**: ask the user to enable it as above.
 - **"DevTools is not connected to this app"**: ask the user to connect
   DevTools to the app.
