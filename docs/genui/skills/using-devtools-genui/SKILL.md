@@ -29,11 +29,12 @@ DevTools sessions), so the number varies. Call the `vm_service` tool with
 {"command": "callMethod", "method": "s1.genUi", "arguments": {"command": "help"}}
 ```
 
-A wrong prefix fails with an internal error such as "Null check operator used
-on a null value" (from `NamedLookup`) or "Method not found". Try `s2.genUi`,
-`s3.genUi`, ... one at a time (up to about `s10`), and use whichever works for
-the rest of the session. The prefix changes if DevTools reconnects or is
-reloaded, so probe again if a working prefix starts failing.
+A wrong prefix fails with an error whose text varies (e.g. `Unknown method`,
+`Method not found`, or an internal "Null check operator used on a null value"
+error). Treat any error as "wrong prefix": try `s2.genUi`, `s3.genUi`, ... one
+at a time (up to about `s10`), and use whichever works for the rest of the
+session. The prefix changes if DevTools reconnects or is reloaded, so probe
+again if a working prefix starts failing.
 
 Pass a command's params as top-level keys of `arguments`, next to `command`,
 not nested under `params`:
@@ -61,16 +62,47 @@ not nested under `params`:
 Buttons bound to DevTools actions run in DevTools; mutating actions ask the
 user for confirmation there. Never invent data source or action ids.
 
+## Launching DevTools
+
+If every prefix fails, no DevTools is connected to the app with GenUI enabled.
+Start one yourself instead of asking the user to set it up:
+
+1. Get the app's VM service URI and DTD URI from the Dart MCP server's `dtd`
+   tool (`listDtdUris`, then `connect` and `listConnectedApps`).
+2. Run DevTools as a long-running background process (do not wait for it to
+   exit):
+
+   ```sh
+   dart devtools --machine --no-launch-browser --port=0 --dtd-uri=<DTD URI>
+   ```
+
+   Wait for the `server.started` line on stdout and read `host` and `port`
+   from it, e.g.
+   `{"event":"server.started",...,"params":{"host":"127.0.0.1","port":40819,...}}`.
+3. Build the URL, URL-encoding the VM service URI:
+
+   ```text
+   http://<host>:<port>/genui?uri=<encoded VM service URI>&enableGenUi=true
+   ```
+
+   `enableGenUi=true` turns the GenUI experiment on for that session without
+   changing the user's saved settings.
+4. Open the URL in a browser, or give it to the user to open, whichever fits
+   your environment.
+5. Once the page has loaded and connected (usually a few seconds), probe the
+   `sN.genUi` prefixes again. Retry for up to about 30 seconds.
+
+Reuse the same DevTools server for the rest of the session.
+
 ## Troubleshooting
 
 - **Every prefix fails**: DevTools is not connected to this app, or the GenUI
-  experiment is off. Ask the user to open DevTools for the app (e.g. from
-  their IDE, or by pasting the app's VM service URI into DevTools' connect
-  dialog), then enable **Settings (gear icon) > Experimental features >
-  Enable GenUI**, and reload the DevTools page if it still fails. Then probe
-  the prefixes again.
-- **"The GenUI experiment is disabled"**: ask the user to enable it as above.
-- **"DevTools is not connected to this app"**: ask the user to connect
-  DevTools to the app.
+  experiment is off. Launch DevTools as described above. If the user already
+  has DevTools open, they can instead enable **Settings (gear icon) >
+  Experimental features > Enable GenUI** and reload the page.
+- **"The GenUI experiment is disabled"**: open the DevTools URL with
+  `enableGenUi=true`, or ask the user to enable it as above.
+- **"DevTools is not connected to this app"**: open a DevTools URL with the
+  app's `uri`, as described above.
 - **`vm_service` is not connected to the app**: call it with
   `command: connect` and the app's VM service URI as `appUri` first.

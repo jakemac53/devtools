@@ -185,6 +185,12 @@ class PreferencesController extends DisposableController
       _ExperimentPreferences.genUi.storageKey,
       defaultsTo: false,
     );
+    // Set before adding the listener below, so that forcing the experiment on
+    // via the query parameter only affects this session and does not change
+    // the saved preference.
+    if (DevToolsQueryParams.load().enableGenUi) {
+      genUiEnabled.value = true;
+    }
     addAutoDisposeListener(genUiEnabled, () {
       safeUnawaited(
         storage.setValue(

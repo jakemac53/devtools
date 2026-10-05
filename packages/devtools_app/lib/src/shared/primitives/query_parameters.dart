@@ -73,6 +73,14 @@ extension type DevToolsQueryParams(Map<String, String?> params) {
   /// load using wasm.
   bool get useJs => params[compilerKey] == 'js';
 
+  /// Whether the GenUI experiment should be enabled for this session,
+  /// regardless of the saved preference.
+  ///
+  /// Agents that launch DevTools on demand set this so that DevTools registers
+  /// its `genUi` VM service method without the user enabling the experiment in
+  /// settings first.
+  bool get enableGenUi => params[enableGenUiKey] == 'true';
+
   static const vmServiceUriKey = 'uri';
   static const hideScreensKey = 'hide';
   static const hideExtensionsValue = 'extensions';
@@ -81,6 +89,7 @@ extension type DevToolsQueryParams(Map<String, String?> params) {
   static const inspectorRefKey = 'inspectorRef';
   static const ideKey = 'ide';
   static const ideFeatureKey = 'ideFeature';
+  static const enableGenUiKey = 'enableGenUi';
 
   /// Query parameter key to determine whether to use dart2wasm or dart2js.
   ///

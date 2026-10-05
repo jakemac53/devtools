@@ -156,5 +156,27 @@ void main() {
         );
       }
     });
+
+    test('enableGenUi is only true for "true"', () {
+      expect(DevToolsQueryParams.empty().enableGenUi, false);
+      expect(
+        DevToolsQueryParams({
+          DevToolsQueryParams.enableGenUiKey: 'true',
+        }).enableGenUi,
+        true,
+      );
+      expect(
+        DevToolsQueryParams({
+          DevToolsQueryParams.enableGenUiKey: 'false',
+        }).enableGenUi,
+        false,
+      );
+      expect(
+        DevToolsQueryParams.fromUrl(
+          'http://localhost:9101/genui?uri=ws://foo&enableGenUi=true',
+        ).enableGenUi,
+        true,
+      );
+    });
   });
 }
