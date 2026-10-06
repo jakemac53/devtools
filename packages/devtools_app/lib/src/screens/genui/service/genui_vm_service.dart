@@ -4,6 +4,7 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:devtools_app_shared/utils.dart';
@@ -231,6 +232,10 @@ class _GenUiServiceException implements Exception {
 /// every new connection. The VM service has no way to unregister a service,
 /// so when the experiment is disabled the service stays registered and
 /// [GenUiVmServiceHandler] reports that the experiment is disabled.
+///
+/// After registering, this finds the full, namespaced method name (e.g.
+/// `s1.genUi`) and reports it to [onRegistered], so an embedder can tell an
+/// external agent which method to call.
 class GenUiVmServiceRegistrar extends DisposableController
     with AutoDisposeControllerMixin {
   GenUiVmServiceRegistrar({
@@ -238,6 +243,7 @@ class GenUiVmServiceRegistrar extends DisposableController
     required Listenable connection,
     required this.currentService,
     required this.handler,
+    this.onRegistered,
   }) {
     addAutoDisposeListener(enabled, _update);
     addAutoDisposeListener(connection, _update);
@@ -252,6 +258,32 @@ class GenUiVmServiceRegistrar extends DisposableController
 
   /// Handles calls to the registered service.
   final GenUiVmServiceHandler handler;
+
+  /// Called with the full method name once it is registered and found.
+  final void Function(String method)? onRegistered;
+
+  /// The highest service namespace number (`s<n>`) tried when finding the
+  /// registered method name.
+  ///
+  /// The VM service reuses freed numbers, so they stay small in practice.
+  @visibleForTesting
+  static const maxNamespace = 64;
+
+  /// The command this registrar answers (before [handler]) to find its own
+  /// method name; see [_findMethodName].
+  static const _identifyCommand = '_identify';
+
+  /// Identifies this DevTools instance to [_findMethodName], since every
+  /// DevTools connected to the app registers a `genUi` method.
+  final _instanceId = _randomId();
+
+  static String _randomId() {
+    final random = Random.secure();
+    return List.generate(
+      16,
+      (_) => random.nextInt(256).toRadixString(16).padLeft(2, '0'),
+    ).join();
+  }
 
   /// The VM service the method is registered with, if any.
   @visibleForTesting
@@ -268,10 +300,48 @@ class GenUiVmServiceRegistrar extends DisposableController
 
   Future<void> _register(VmService service) async {
     try {
-      service.registerServiceCallback(genUiServiceName, handler.call);
+      service.registerServiceCallback(genUiServiceName, _call);
       await service.registerService(genUiServiceName, genUiServiceAlias);
     } catch (e, st) {
       _log.warning('Failed to register the $genUiServiceName service', e, st);
+      return;
     }
+    final onRegistered = this.onRegistered;
+    if (onRegistered == null) return;
+    final method = await _findMethodName(service);
+    if (method != null && identical(service, _registeredService)) {
+      onRegistered(method);
+    }
+  }
+
+  Future<Map<String, dynamic>> _call(Map<String, dynamic> params) async {
+    if (params['command'] == _identifyCommand) {
+      return {
+        'result': {'type': 'Success', 'instanceId': _instanceId},
+      };
+    }
+    return handler.call(params);
+  }
+
+  /// Returns the namespaced name of the method this registrar registered with
+  /// [service], or null if it can't be found.
+  ///
+  /// The VM service only announces a registration to the other clients, so
+  /// this calls `s<n>.genUi` for increasing `n` until this instance answers.
+  Future<String?> _findMethodName(VmService service) async {
+    for (var namespace = 0; namespace <= maxNamespace; namespace++) {
+      final method = 's$namespace.$genUiServiceName';
+      try {
+        final response = await service.callMethod(
+          method,
+          args: {'command': _identifyCommand},
+        );
+        if (response.json?['instanceId'] == _instanceId) return method;
+      } catch (_) {
+        // No such method, or another client's method; try the next one.
+      }
+    }
+    _log.warning('Could not find the registered $genUiServiceName method');
+    return null;
   }
 }

@@ -58,6 +58,8 @@ not nested under `params`:
    place rather than creating new surfaces.
 5. Use `getSurfaceState` to see what the user selected, and `pollEvents` to
    receive their interactions (e.g. button presses with `event` actions).
+   When DevTools is shown in the `devtools_genui` side pane, interactions also
+   arrive as chat messages from the user; handle those directly.
 
 Buttons bound to DevTools actions run in DevTools; mutating actions ask the
 user for confirmation there. Never invent data source or action ids.
@@ -65,34 +67,48 @@ user for confirmation there. Never invent data source or action ids.
 ## Launching DevTools
 
 If every prefix fails, no DevTools is connected to the app with GenUI enabled.
-Start one yourself instead of asking the user to set it up:
+Open one yourself instead of asking the user to set it up:
 
-1. Get the app's VM service URI and DTD URI from the Dart MCP server's `dtd`
-   tool (`listDtdUris`, then `connect` and `listConnectedApps`).
-2. Run DevTools as a long-running background process (do not wait for it to
-   exit):
+<!-- TODO: The Dart SDK's DevTools does not include GenUI yet, so for this
+prototype everyone uses one shared DevTools build from the GenUI branch,
+hosted at http://jakemac0.c.googlers.com:8086. Once GenUI ships, go back to
+starting a local one with `dart devtools --machine --no-launch-browser
+--port=0 --dtd-uri=<DTD URI>` and reading `host` and `port` from its
+`server.started` line. -->
 
-   ```sh
-   dart devtools --machine --no-launch-browser --port=0 --dtd-uri=<DTD URI>
-   ```
-
-   Wait for the `server.started` line on stdout and read `host` and `port`
-   from it, e.g.
-   `{"event":"server.started",...,"params":{"host":"127.0.0.1","port":40819,...}}`.
+1. Get the app's VM service URI from the Dart MCP server's `dtd` tool
+   (`listDtdUris`, then `connect` and `listConnectedApps`).
+2. Use the hosted GenUI DevTools at `http://jakemac0.c.googlers.com:8086`. Do
+   not start a DevTools server. The page runs in the user's browser and
+   connects to the app from there; the side pane routes that connection to
+   this machine for you.
 3. Build the URL, URL-encoding the VM service URI:
 
    ```text
-   http://<host>:<port>/genui?uri=<encoded VM service URI>&enableGenUi=true
+   http://jakemac0.c.googlers.com:8086/genui?uri=<encoded VM service URI>&enableGenUi=true
    ```
 
    `enableGenUi=true` turns the GenUI experiment on for that session without
    changing the user's saved settings.
-4. Open the URL in a browser, or give it to the user to open, whichever fits
-   your environment.
-5. Once the page has loaded and connected (usually a few seconds), probe the
-   `sN.genUi` prefixes again. Retry for up to about 30 seconds.
+4. Show the URL to the user:
+   - **In Antigravity or Jetski with the `devtools_genui` plugin enabled**,
+     reply with a link that opens it in the side pane, URL-encoding the whole
+     DevTools URL into the `url` parameter:
 
-Reuse the same DevTools server for the rest of the session.
+     ```markdown
+     [Open DevTools GenUI](sidecar://devtools_genui/devtools/?url=<encoded DevTools URL>)
+     ```
+
+   - **Otherwise**, give the user the URL to open in their browser. This only
+     works if their browser runs on the same machine as the app, since the
+     VM service URI is a loopback address.
+5. Once the page has loaded and connected (usually a few seconds), the side
+   pane sends you a chat message saying DevTools GenUI is ready, with the
+   exact method to call (e.g. `s2.genUi`); use it without probing. Without
+   the side pane, probe the `sN.genUi` prefixes again, retrying for up to
+   about 30 seconds.
+
+Reuse the same DevTools page for the rest of the session.
 
 ## Troubleshooting
 

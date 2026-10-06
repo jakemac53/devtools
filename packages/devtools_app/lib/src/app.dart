@@ -33,6 +33,7 @@ import 'screens/deep_link_validation/deep_links_controller.dart';
 import 'screens/deep_link_validation/deep_links_screen.dart';
 import 'screens/dtd/dtd_tools_controller.dart';
 import 'screens/dtd/dtd_tools_screen.dart';
+import 'screens/genui/embedder_messages.dart';
 import 'screens/genui/genui_controller.dart';
 import 'screens/genui/genui_screen.dart';
 import 'screens/genui/service/genui_vm_service.dart';
@@ -213,6 +214,8 @@ class DevToolsAppState extends State<DevToolsApp> with AutoDisposeMixin {
         showGenUiScreen: () =>
             routerDelegate.navigateIfNotCurrent(ScreenMetaData.genUi.id),
       ),
+      onRegistered: (method) =>
+          postGenUiEmbedderMessage(genUiReadyMessageType, {'method': method}),
     );
 
     // Workaround for https://github.com/flutter/flutter/issues/155265.

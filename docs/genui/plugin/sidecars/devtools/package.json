@@ -1,0 +1,7 @@
+{
+  "name": "devtools_genui_sidecar",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Shows DevTools GenUI in the Antigravity side pane."
+}

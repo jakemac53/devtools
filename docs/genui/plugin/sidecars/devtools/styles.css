@@ -1,0 +1,71 @@
+/*
+ * Copyright 2026 The Flutter Authors
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file or at https://developers.google.com/open-source/licenses/bsd.
+ */
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--background, #fafafa);
+  color: var(--foreground, #333);
+  display: flex;
+  flex-direction: column;
+}
+
+iframe {
+  flex: 1;
+  width: 100%;
+  border: none;
+}
+
+.empty {
+  padding: 16px;
+  line-height: 1.4;
+}
+
+.muted-text {
+  color: var(--muted-foreground, #666);
+  font-size: 13px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+input {
+  flex: 1;
+  background: var(--card, #fff);
+  color: var(--foreground, #333);
+  border: 1px solid var(--border, #e0e0e0);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
+button {
+  background: var(--primary, #0e639c);
+  color: var(--primary-foreground, #fff);
+  border: 1px solid var(--border, transparent);
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: color-mix(in srgb, var(--primary, #0e639c) 88%, var(--foreground, #000));
+}
+
+.status {
+  font-size: 12px;
+  padding: 4px 8px;
+  color: var(--muted-foreground, #666);
+  border-bottom: 1px solid var(--border, #e0e0e0);
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+  Copyright 2026 The Flutter Authors
+  Use of this source code is governed by a BSD-style license that can be
+  found in the LICENSE file or at https://developers.google.com/open-source/licenses/bsd.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DevTools GenUI</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="empty" class="empty" hidden>
+    <h3>DevTools GenUI</h3>
+    <p class="muted-text">
+      Ask the agent to build a DevTools view of your running app, e.g.
+      "show me a dashboard of my app's memory usage". It starts DevTools and
+      opens it here.
+    </p>
+    <form id="url-form">
+      <label class="muted-text" for="url-input">Or paste a DevTools URL:</label>
+      <div class="row">
+        <input id="url-input" type="url" placeholder="http://jakemac0.c.googlers.com:8086/genui?uri=...">
+        <button type="submit">Open</button>
+      </div>
+    </form>
+  </div>
+  <div id="status" class="status" hidden></div>
+  <iframe id="devtools" title="DevTools GenUI" hidden></iframe>
+  <script src="/shell.js"></script>
+</body>
+</html>

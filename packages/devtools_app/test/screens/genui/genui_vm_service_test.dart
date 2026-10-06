@@ -33,6 +33,9 @@ class _FakeVmService extends Fake implements VmService {
   final callbacks = <String, ServiceCallback>{};
   final registered = <String, String>{};
 
+  /// The namespace the VM service gives registered methods (e.g. `s2`).
+  String namespace = 's2';
+
   @override
   void registerServiceCallback(String service, ServiceCallback cb) {
     callbacks[service] = cb;
@@ -42,6 +45,20 @@ class _FakeVmService extends Fake implements VmService {
   Future<Success> registerService(String service, String alias) async {
     registered[service] = alias;
     return Success();
+  }
+
+  @override
+  Future<Response> callMethod(
+    String method, {
+    String? isolateId,
+    Map<String, dynamic>? args,
+  }) async {
+    final callback = callbacks[genUiServiceName];
+    if (callback == null || method != '$namespace.$genUiServiceName') {
+      throw RPCError(method, RPCErrorKind.kMethodNotFound.code, 'Not found');
+    }
+    final response = await callback({...?args});
+    return Response.parse(response['result'] as Map<String, dynamic>)!;
   }
 }
 
@@ -223,6 +240,29 @@ void main() {
       await pumpEventQueue();
       expect(second.registered, {genUiServiceName: genUiServiceAlias});
       expect(registrar.registeredService, same(second));
+    });
+
+    test('reports its namespaced method name once registered', () async {
+      final service = _FakeVmService()..namespace = 's3';
+      final reported = <String>[];
+      final registrar = GenUiVmServiceRegistrar(
+        enabled: ValueNotifier(true),
+        connection: ValueNotifier(0),
+        currentService: () => service,
+        handler: handler,
+        onRegistered: reported.add,
+      );
+      addTearDown(registrar.dispose);
+      await pumpEventQueue();
+      expect(reported, ['s3.$genUiServiceName']);
+
+      // Other commands still reach the handler.
+      final response = await service.callbacks[genUiServiceName]!({
+        'command': 'pollEvents',
+      });
+      expect(response['result'], {
+        'value': {'events': <Object?>[]},
+      });
     });
   });
 }

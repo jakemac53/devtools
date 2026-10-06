@@ -1,0 +1,9 @@
+{
+  "name": "devtools_genui",
+  "description": "Shows Flutter DevTools GenUI (custom, interactive debugging UI built by the agent from live DevTools data) in the side pane, and tells the agent when you interact with it. Includes the skill for driving DevTools GenUI through the Dart MCP server.",
+  "suggestedPrompts": [
+    "Build me a dashboard of my app's memory usage",
+    "Show the widget tree next to the layout explorer",
+    "Which functions are using the most CPU right now?"
+  ]
+}

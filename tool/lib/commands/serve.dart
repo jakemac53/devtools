@@ -21,6 +21,8 @@ const _machineFlag = 'machine';
 const _dtdUriFlag = 'dtd-uri';
 const _dtdExposedUriFlag = 'dtd-exposed-uri';
 const _allowEmbeddingFlag = 'allow-embedding';
+const _hostFlag = 'host';
+const _portFlag = 'port';
 
 /// This command builds DevTools in release mode by running the
 /// `dt build` command and then serves DevTools with a locally
@@ -112,6 +114,21 @@ class ServeCommand extends Command {
       ..addFlag(
         _allowEmbeddingFlag,
         help: 'Allow embedding DevTools inside an iframe.',
+      )
+      ..addOption(
+        _hostFlag,
+        valueHelp: 'host',
+        help:
+            'Hostname to serve DevTools on (defaults to localhost). Use '
+            '0.0.0.0 to make DevTools reachable from other machines, e.g. '
+            'through a proxy to a remote workstation.',
+      )
+      ..addOption(
+        _portFlag,
+        valueHelp: 'port',
+        help:
+            'Port to serve DevTools on (defaults to 9100); specify 0 to '
+            'automatically use any available port.',
       );
   }
 

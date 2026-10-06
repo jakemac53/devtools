@@ -19,6 +19,7 @@ import 'agent/system_prompt.dart';
 import 'catalog/action_delegate.dart';
 import 'catalog/devtools_catalog.dart';
 import 'data/json_utils.dart';
+import 'embedder_messages.dart';
 import 'genui_spec.dart';
 import 'genui_store.dart';
 import 'sources/default_registries.dart';
@@ -138,6 +139,7 @@ class GenUiController extends DevToolsScreenController
         renderErrors.add(event['error']);
       } else if (_conversation == null) {
         _externalEvents.add(event);
+        postGenUiEmbedderMessage(genUiEventMessageType, {'event': event});
       }
     }
     final overflow = _externalEvents.length - maxExternalEvents;
